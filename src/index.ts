@@ -2,6 +2,7 @@ import { fastify, FastifyInstance } from 'fastify'
 import fastifyBlipp from 'fastify-blipp'
 import { IncomingMessage, Server, ServerResponse } from 'http'
 
+import authRoutes from './modules/routes/auth'
 import statusRoutes from './modules/routes/status'
 import prismaPlugin from './plugins/prisma'
 
@@ -10,7 +11,9 @@ const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
 
 server.register(prismaPlugin)
 server.register(fastifyBlipp)
+
 server.register(statusRoutes)
+server.register(authRoutes)
 
 const start = async () => {
   try {

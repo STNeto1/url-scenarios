@@ -12,9 +12,12 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.6.1",
+    "argon2": "^0.30.2",
     "fastify": "^4.10.2",
     "fastify-blipp": "^3.1.0",
-    "fastify-plugin": "^4.3.0"
+    "fastify-plugin": "^4.3.0",
+    "zod": "^3.19.1",
+    "zod-to-json-schema": "^3.19.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.20",
