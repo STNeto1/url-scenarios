@@ -3,10 +3,12 @@ import fastifyBlipp from 'fastify-blipp'
 import { IncomingMessage, Server, ServerResponse } from 'http'
 
 import statusRoutes from './modules/routes/status'
+import prismaPlugin from './plugins/prisma'
 
 const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
   fastify({ logger: true })
 
+server.register(prismaPlugin)
 server.register(fastifyBlipp)
 server.register(statusRoutes)
 
