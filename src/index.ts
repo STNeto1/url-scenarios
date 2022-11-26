@@ -4,6 +4,7 @@ import { IncomingMessage, Server, ServerResponse } from 'http'
 
 import authRoutes from './modules/routes/auth'
 import statusRoutes from './modules/routes/status'
+import urlRoutes from './modules/routes/url'
 import configPlugin from './plugins/config'
 import jwtPlugin from './plugins/jwt'
 import prismaPlugin from './plugins/prisma'
@@ -18,6 +19,7 @@ server.register(fastifyBlipp)
 
 server.register(statusRoutes)
 server.register(authRoutes)
+server.register(urlRoutes)
 
 const start = async () => {
   try {
