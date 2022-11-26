@@ -4,12 +4,14 @@ import { IncomingMessage, Server, ServerResponse } from 'http'
 
 import authRoutes from './modules/routes/auth'
 import statusRoutes from './modules/routes/status'
+import configPlugin from './plugins/config'
 import jwtPlugin from './plugins/jwt'
 import prismaPlugin from './plugins/prisma'
 
 const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
   fastify({ logger: true })
 
+server.register(configPlugin)
 server.register(prismaPlugin)
 server.register(jwtPlugin)
 server.register(fastifyBlipp)

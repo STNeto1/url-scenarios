@@ -15,7 +15,7 @@ declare module 'fastify' {
 
 const jwtPlugin: FastifyPluginAsync = fp(async (server, options) => {
   server.register(fastifyJwt, {
-    secret: 'some-secret'
+    secret: server.config.JWT_SECRET
   })
 
   server.decorate(
