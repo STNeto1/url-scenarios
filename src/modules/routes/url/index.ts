@@ -9,7 +9,12 @@ import fp from 'fastify-plugin'
 import { z } from 'zod'
 import zodToJsonSchema from 'zod-to-json-schema'
 import { JwtPayload } from '../auth/schemas'
-import { createUrlSchema, paginationSchema, urlListSchema } from './schemas'
+import {
+  createUrlSchema,
+  deleteUrlSchema,
+  paginationSchema,
+  urlListSchema
+} from './schemas'
 
 export default fp(
   async (server: FastifyInstance, _: FastifyPluginOptions, next: Function) => {
@@ -95,6 +100,54 @@ export default fp(
           data: urls,
           pages: Math.ceil(count / params.limit)
         })
+      }
+    })
+
+    server.route({
+      url: '/v1/url/delete/:id',
+      logLevel: 'warn',
+      method: ['DELETE'],
+      onRequest: [server.authenticate],
+      schema: {
+        params: zodToJsonSchema(deleteUrlSchema, 'singleUrl')
+      },
+      handler: async (request: FastifyRequest, reply: FastifyReply) => {
+        const payload = request.user as JwtPayload
+        const { id } = request.params as z.infer<typeof deleteUrlSchema>
+
+        const user = await server.prisma.user.findUnique({
+          where: {
+            id: payload.sub
+          }
+        })
+
+        if (!user) {
+          return reply.status(401).send({
+            message: 'Unauthorized'
+          })
+        }
+
+        const url = await server.prisma.url.findUnique({
+          where: {
+            id
+          }
+        })
+        if (!url || Boolean(url.deletedAt) || url.userId !== user.id) {
+          return reply.status(404).send({
+            message: 'Not found'
+          })
+        }
+
+        await server.prisma.url.update({
+          where: {
+            id
+          },
+          data: {
+            deletedAt: new Date()
+          }
+        })
+
+        return reply.status(204).send()
       }
     })
 

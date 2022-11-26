@@ -20,3 +20,7 @@ export const urlListSchema = z.object({
     })
   )
 })
+
+export const deleteUrlSchema = z.object({
+  id: z.string()
+})
