@@ -8,21 +8,12 @@ import {
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import zodToJsonSchema from 'zod-to-json-schema'
-
-const loginSchema = z
-  .object({
-    email: z.string().email(),
-    password: z.string()
-  })
-  .describe('Login schema')
-
-const registerSchema = z
-  .object({
-    name: z.string(),
-    email: z.string().email(),
-    password: z.string()
-  })
-  .describe('Register schema')
+import {
+  JwtPayload,
+  loginSchema,
+  profileResponseSchema,
+  registerSchema
+} from './schemas'
 
 export default fp(
   async (server: FastifyInstance, _: FastifyPluginOptions, next: Function) => {
@@ -55,7 +46,11 @@ export default fp(
           })
         }
 
-        return reply.send(user)
+        const token = server.jwt.sign({
+          sub: user.id
+        })
+
+        return reply.send({ token })
       }
     })
 
@@ -88,6 +83,39 @@ export default fp(
             password: await argon2.hash(body.password)
           }
         })
+
+        const token = server.jwt.sign({
+          sub: user.id
+        })
+
+        return reply.send({ token })
+      }
+    })
+
+    server.route({
+      url: '/auth/profile',
+      logLevel: 'warn',
+      method: ['GET'],
+      onRequest: [server.authenticate],
+      schema: {
+        response: {
+          200: zodToJsonSchema(profileResponseSchema, 'profileResponseSchema')
+        }
+      },
+      handler: async (request: FastifyRequest, reply: FastifyReply) => {
+        const payload = request.user as JwtPayload
+
+        const user = await server.prisma.user.findUnique({
+          where: {
+            id: payload.sub
+          }
+        })
+
+        if (!user) {
+          return reply.status(401).send({
+            message: 'Unauthorized'
+          })
+        }
 
         return reply.send(user)
       }
