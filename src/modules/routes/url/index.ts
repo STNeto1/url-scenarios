@@ -12,7 +12,9 @@ import { JwtPayload } from '../auth/schemas'
 import {
   createUrlSchema,
   deleteUrlSchema,
+  findUrlSchema,
   paginationSchema,
+  singleUrlSchema,
   urlListSchema
 } from './schemas'
 
@@ -148,6 +150,35 @@ export default fp(
         })
 
         return reply.status(204).send()
+      }
+    })
+
+    server.route({
+      url: '/v1/url/:hash',
+      logLevel: 'warn',
+      method: ['GET'],
+      schema: {
+        params: zodToJsonSchema(findUrlSchema, 'singleUrl'),
+        response: {
+          200: zodToJsonSchema(singleUrlSchema, 'singleUrlSchema')
+        }
+      },
+      handler: async (request: FastifyRequest, reply: FastifyReply) => {
+        const { hash } = request.params as z.infer<typeof findUrlSchema>
+
+        const url = await server.prisma.url.findFirst({
+          where: {
+            hash,
+            deletedAt: null
+          }
+        })
+        if (!url) {
+          return reply.status(404).send({
+            message: 'Not found'
+          })
+        }
+
+        return reply.status(200).send(url)
       }
     })
 
