@@ -1,0 +1,5 @@
+.env.example
+.eslintrc.json
+.gitignore
+.prettierrc
+ideas-url.drawio.png
