@@ -7,6 +7,7 @@ import statusRoutes from './modules/routes/status'
 import urlRoutes from './modules/routes/url'
 import configPlugin from './plugins/config'
 import jwtPlugin from './plugins/jwt'
+import metricsPlugin from './plugins/metrics'
 import prismaPlugin from './plugins/prisma'
 import redisPlugin from './plugins/redis'
 import { getPort } from './utils/get-port'
@@ -18,6 +19,7 @@ server.register(configPlugin)
 server.register(prismaPlugin)
 server.register(jwtPlugin)
 server.register(redisPlugin)
+server.register(metricsPlugin)
 server.register(fastifyBlipp)
 
 server.register(statusRoutes)
