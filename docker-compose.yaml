@@ -1,6 +1,18 @@
 version: '3.2'
 
 services:
+  url-shortener:
+    container_name: url-shortener
+    image: some-image
+    ports:
+      - 4000:4000
+    environment:
+      - PORT=4000
+      - DATABASE_URL=
+      - NODE_ENV=production
+      - JWT_SECRET=secret
+      - REDIS_URL=redis://redis:6379
+
   redis:
     image: 'redis:alpine'
     command: redis-server
@@ -13,3 +25,47 @@ services:
 
     environment:
       - REDIS_REPLICATION_MODE=master
+
+  cadvisor:
+    image: 'gcr.io/cadvisor/cadvisor:latest'
+    ports:
+      - '8080:8080'
+    volumes:
+      - '/etc/localtime:/etc/localtime:ro'
+      - '/etc/timezone:/etc/timezone:ro'
+      - '/:/rootfs:ro'
+      - '/var/run:/var/run:rw'
+      - '/sys:/sys:rw'
+      - '/var/lib/docker:/var/lib/docker:ro'
+    devices:
+      - '/dev/kmsg:/dev/kmsg'
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9000:9090
+    volumes:
+      - '/etc/localtime:/etc/localtime:ro'
+      - '/etc/timezone:/etc/timezone:ro'
+      - ./prometheus:/etc/prometheus
+      - $PWD/.docker/prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - '/etc/localtime:/etc/localtime:ro'
+      - '/etc/timezone:/etc/timezone:ro'
+      - ./grafana:/etc/grafana
+      - $PWD/.docker/grafana-data:/var/lib/grafana
+    user: '1000'
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus-data:
+
+  grafana-data:
