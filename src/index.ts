@@ -8,6 +8,7 @@ import urlRoutes from './modules/routes/url'
 import configPlugin from './plugins/config'
 import jwtPlugin from './plugins/jwt'
 import prismaPlugin from './plugins/prisma'
+import { getPort } from './utils/get-port'
 
 const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
   fastify({ logger: true })
@@ -24,9 +25,13 @@ server.register(urlRoutes)
 const start = async () => {
   try {
     await server.listen({
-      port: 3000
+      port: getPort(3000),
+      host: '0.0.0.0'
     })
-    server.blipp()
+
+    if (server.config.NODE_ENV !== 'production') {
+      server.blipp()
+    }
   } catch (err) {
     server.log.error(err)
     process.exit(1)
