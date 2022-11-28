@@ -8,12 +8,12 @@ import {
 import fp from 'fastify-plugin'
 import { z } from 'zod'
 import zodToJsonSchema from 'zod-to-json-schema'
+import { safePagination } from '../../../utils/pagination'
 import { JwtPayload } from '../auth/schemas'
 import {
   createUrlSchema,
   deleteUrlSchema,
   findUrlSchema,
-  paginationSchema,
   singleUrlSchema,
   urlListSchema
 } from './schemas'
@@ -62,14 +62,13 @@ export default fp(
       method: ['GET'],
       onRequest: [server.authenticate],
       schema: {
-        params: zodToJsonSchema(paginationSchema, 'paginationSchema'),
         response: {
           200: zodToJsonSchema(urlListSchema, 'urlListSchema')
         }
       },
       handler: async (request: FastifyRequest, reply: FastifyReply) => {
         const payload = request.user as JwtPayload
-        const params = request.params as z.infer<typeof paginationSchema>
+        const pagination = safePagination(request.raw.url ?? '')
 
         const user = await server.prisma.user.findUnique({
           where: {
@@ -88,8 +87,8 @@ export default fp(
             userId: user.id,
             deletedAt: null
           },
-          skip: (params.page - 1) * params.limit,
-          take: params.limit
+          skip: (pagination.page - 1) * pagination.limit,
+          take: pagination.limit
         })
         const count = await server.prisma.url.count({
           where: {
@@ -100,7 +99,7 @@ export default fp(
 
         return reply.status(200).send({
           data: urls,
-          pages: Math.ceil(count / params.limit)
+          pages: Math.ceil(count / pagination.limit)
         })
       }
     })
