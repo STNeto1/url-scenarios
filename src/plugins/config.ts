@@ -8,7 +8,10 @@ dotenv.config()
 const configSchema = z.object({
   DATABASE_URL: z.string().describe('Prisma database URL'),
   JWT_SECRET: z.string().min(1),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development')
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
+  REDIS_URL: z.string()
 })
 
 declare module 'fastify' {

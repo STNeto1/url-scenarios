@@ -1,9 +1,15 @@
 version: '3.2'
 
 services:
-  api:
-    build:
-      context: .
-      dockerfile: 'Dockerfile'
+  redis:
+    image: 'redis:alpine'
+    command: redis-server
     ports:
-      - '3000:3000'
+      - '6379:6379'
+
+    volumes:
+      - $PWD/.docker/redis-data:/var/lib/redis
+      - $PWD/.docker/redis.conf:/usr/local/etc/redis/redis.conf
+
+    environment:
+      - REDIS_REPLICATION_MODE=master

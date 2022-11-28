@@ -5,8 +5,19 @@ export const createUrlSchema = z.object({
 })
 
 export const paginationSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10)
+  page: z.preprocess(
+    (val) => (typeof val === 'string' ? parseInt(val) : 1),
+    z.number().min(1).default(1)
+  ),
+  limit: z.preprocess(
+    (val) => (typeof val === 'string' ? parseInt(val) : 10),
+    z.number().min(1).default(10)
+  )
+})
+
+export const publicUrlSchema = z.object({
+  url: z.string(),
+  hash: z.string()
 })
 
 export const singleUrlSchema = z.object({

@@ -6,15 +6,16 @@ import {
   FastifyRequest
 } from 'fastify'
 import fp from 'fastify-plugin'
+import superjson from 'superjson'
 import { z } from 'zod'
 import zodToJsonSchema from 'zod-to-json-schema'
+import { safePagination } from '../../../utils/pagination'
 import { JwtPayload } from '../auth/schemas'
 import {
   createUrlSchema,
   deleteUrlSchema,
   findUrlSchema,
-  paginationSchema,
-  singleUrlSchema,
+  publicUrlSchema,
   urlListSchema
 } from './schemas'
 
@@ -44,12 +45,16 @@ export default fp(
           })
         }
 
-        await server.prisma.url.create({
+        const url = await server.prisma.url.create({
           data: {
             url: body.url,
             hash: cuid.slug(),
             userId: user.id
           }
+        })
+
+        await server.redis.set(url.hash, superjson.stringify(url), {
+          EX: 60 * 60 * 24 // 1 day
         })
 
         return reply.status(201).send()
@@ -62,14 +67,14 @@ export default fp(
       method: ['GET'],
       onRequest: [server.authenticate],
       schema: {
-        params: zodToJsonSchema(paginationSchema, 'paginationSchema'),
         response: {
           200: zodToJsonSchema(urlListSchema, 'urlListSchema')
         }
       },
       handler: async (request: FastifyRequest, reply: FastifyReply) => {
         const payload = request.user as JwtPayload
-        const params = request.params as z.infer<typeof paginationSchema>
+
+        const pagination = safePagination(request.raw.url ?? '')
 
         const user = await server.prisma.user.findUnique({
           where: {
@@ -88,9 +93,10 @@ export default fp(
             userId: user.id,
             deletedAt: null
           },
-          skip: (params.page - 1) * params.limit,
-          take: params.limit
+          skip: (pagination.page - 1) * pagination.limit,
+          take: pagination.limit
         })
+
         const count = await server.prisma.url.count({
           where: {
             userId: user.id,
@@ -100,7 +106,7 @@ export default fp(
 
         return reply.status(200).send({
           data: urls,
-          pages: Math.ceil(count / params.limit)
+          pages: Math.ceil(count / pagination.limit)
         })
       }
     })
@@ -149,6 +155,8 @@ export default fp(
           }
         })
 
+        await server.redis.del(url.hash)
+
         return reply.status(204).send()
       }
     })
@@ -160,11 +168,18 @@ export default fp(
       schema: {
         params: zodToJsonSchema(findUrlSchema, 'singleUrl'),
         response: {
-          200: zodToJsonSchema(singleUrlSchema, 'singleUrlSchema')
+          200: zodToJsonSchema(publicUrlSchema, 'publicUrlSchema')
         }
       },
       handler: async (request: FastifyRequest, reply: FastifyReply) => {
         const { hash } = request.params as z.infer<typeof findUrlSchema>
+
+        const redisUrl = await server.redis.get(hash)
+        if (redisUrl) {
+          return reply
+            .status(200)
+            .send(superjson.parse<z.infer<typeof publicUrlSchema>>(redisUrl))
+        }
 
         const url = await server.prisma.url.findFirst({
           where: {
@@ -177,6 +192,10 @@ export default fp(
             message: 'Not found'
           })
         }
+
+        await server.redis.set(hash, superjson.stringify(url), {
+          EX: 60 * 60 * 24 // 1 day
+        })
 
         return reply.status(200).send(url)
       }

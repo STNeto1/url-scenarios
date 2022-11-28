@@ -21,6 +21,8 @@
     "fastify": "^4.10.2",
     "fastify-blipp": "^3.1.0",
     "fastify-plugin": "^4.3.0",
+    "redis": "^4.5.1",
+    "superjson": "^1.11.0",
     "zod": "^3.19.1",
     "zod-to-json-schema": "^3.19.1"
   },

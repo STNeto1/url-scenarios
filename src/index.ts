@@ -8,6 +8,7 @@ import urlRoutes from './modules/routes/url'
 import configPlugin from './plugins/config'
 import jwtPlugin from './plugins/jwt'
 import prismaPlugin from './plugins/prisma'
+import redisPlugin from './plugins/redis'
 import { getPort } from './utils/get-port'
 
 const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
@@ -16,6 +17,7 @@ const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
 server.register(configPlugin)
 server.register(prismaPlugin)
 server.register(jwtPlugin)
+server.register(redisPlugin)
 server.register(fastifyBlipp)
 
 server.register(statusRoutes)
