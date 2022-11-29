@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-sqs": "^3.218.0",
     "@fastify/jwt": "^6.4.0",
     "@prisma/client": "^4.4.0",
     "argon2": "^0.30.2",

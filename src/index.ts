@@ -10,6 +10,7 @@ import jwtPlugin from './plugins/jwt'
 import metricsPlugin from './plugins/metrics'
 import prismaPlugin from './plugins/prisma'
 import redisPlugin from './plugins/redis'
+import sqsPlugin from './plugins/sqs'
 import { getPort } from './utils/get-port'
 
 const server: FastifyInstance<Server, IncomingMessage, ServerResponse> =
@@ -20,6 +21,7 @@ server.register(prismaPlugin)
 server.register(jwtPlugin)
 server.register(redisPlugin)
 server.register(metricsPlugin)
+server.register(sqsPlugin)
 server.register(fastifyBlipp)
 
 server.register(statusRoutes)

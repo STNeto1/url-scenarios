@@ -9,6 +9,7 @@ import fp from 'fastify-plugin'
 import superjson from 'superjson'
 import { z } from 'zod'
 import zodToJsonSchema from 'zod-to-json-schema'
+import { sendUrlAccessMessage } from '../../../plugins/sqs'
 import { safePagination } from '../../../utils/pagination'
 import { JwtPayload } from '../auth/schemas'
 import {
@@ -176,6 +177,10 @@ export default fp(
 
         const redisUrl = await server.redis.get(hash)
         if (redisUrl) {
+          sendUrlAccessMessage(
+            server.sqs,
+            superjson.parse<z.infer<typeof publicUrlSchema>>(redisUrl)
+          )
           return reply
             .status(200)
             .send(superjson.parse<z.infer<typeof publicUrlSchema>>(redisUrl))

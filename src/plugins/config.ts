@@ -11,7 +11,11 @@ const configSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
-  REDIS_URL: z.string()
+  REDIS_URL: z.string(),
+  AWS_ACCESS_KEY_ID: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
+  AWS_DEFAULT_REGION: z.string(),
+  AWS_SQS_URL: z.string()
 })
 
 declare module 'fastify' {
