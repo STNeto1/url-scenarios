@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon ./src/index.ts",
+    "consumer": "nodemon ./src/consumer.ts",
     "build": "tsc",
     "start": "node ./dist/index.js"
   },
@@ -24,6 +25,7 @@
     "fastify-metrics": "^10.0.0",
     "fastify-plugin": "^4.3.0",
     "redis": "^4.5.1",
+    "sqs-consumer": "^5.7.0",
     "superjson": "^1.11.0",
     "zod": "^3.19.1",
     "zod-to-json-schema": "^3.19.1"

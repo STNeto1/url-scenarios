@@ -30,5 +30,13 @@ model Url {
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user     User        @relation(fields: [userId], references: [id])
+  accesses UrlAccess[]
+}
+
+model UrlAccess {
+  id        String   @id @default(cuid())
+  url       Url      @relation(fields: [urlId], references: [id])
+  urlId     String
+  createdAt DateTime @default(now()) @map("created_at")
 }

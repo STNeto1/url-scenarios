@@ -17,6 +17,7 @@ import {
   deleteUrlSchema,
   findUrlSchema,
   publicUrlSchema,
+  singleUrlSchema,
   urlListSchema
 } from './schemas'
 
@@ -179,11 +180,11 @@ export default fp(
         if (redisUrl) {
           sendUrlAccessMessage(
             server.sqs,
-            superjson.parse<z.infer<typeof publicUrlSchema>>(redisUrl)
+            superjson.parse<z.infer<typeof singleUrlSchema>>(redisUrl)
           )
           return reply
             .status(200)
-            .send(superjson.parse<z.infer<typeof publicUrlSchema>>(redisUrl))
+            .send(superjson.parse<z.infer<typeof singleUrlSchema>>(redisUrl))
         }
 
         const url = await server.prisma.url.findFirst({
