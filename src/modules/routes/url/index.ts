@@ -1,4 +1,5 @@
 import cuid from 'cuid'
+import { format } from 'date-fns'
 import {
   FastifyInstance,
   FastifyPluginOptions,
@@ -11,13 +12,16 @@ import { z } from 'zod'
 import zodToJsonSchema from 'zod-to-json-schema'
 import { sendUrlAccessMessage } from '../../../plugins/sqs'
 import { safePagination } from '../../../utils/pagination'
+import { parseQueryParams } from '../../../utils/parse-query-params'
 import { JwtPayload } from '../auth/schemas'
 import {
   createUrlSchema,
-  deleteUrlSchema,
+  findSingleUrlSchema,
   findUrlSchema,
   publicUrlSchema,
   singleUrlSchema,
+  urlAnalyticsSchema,
+  urlAnalyticsTypeSchema,
   urlListSchema
 } from './schemas'
 
@@ -119,11 +123,11 @@ export default fp(
       method: ['DELETE'],
       onRequest: [server.authenticate],
       schema: {
-        params: zodToJsonSchema(deleteUrlSchema, 'singleUrl')
+        params: zodToJsonSchema(singleUrlSchema, 'singleUrl')
       },
       handler: async (request: FastifyRequest, reply: FastifyReply) => {
         const payload = request.user as JwtPayload
-        const { id } = request.params as z.infer<typeof deleteUrlSchema>
+        const { id } = request.params as z.infer<typeof singleUrlSchema>
 
         const user = await server.prisma.user.findUnique({
           where: {
@@ -207,6 +211,72 @@ export default fp(
       }
     })
 
+    server.route({
+      url: '/v1/url/analytics/:id',
+      logLevel: 'warn',
+      method: ['GET'],
+      onRequest: [server.authenticate],
+      schema: {
+        params: zodToJsonSchema(findSingleUrlSchema, 'singleUrl'),
+        querystring: zodToJsonSchema(
+          urlAnalyticsTypeSchema,
+          'urlAnalyticsTypeSchema'
+        ),
+        response: {
+          200: zodToJsonSchema(urlAnalyticsSchema, 'urlAnalyticsSchema')
+        }
+      },
+      handler: async (request: FastifyRequest, reply: FastifyReply) => {
+        const payload = request.user as JwtPayload
+        const { id } = request.params as z.infer<typeof findSingleUrlSchema>
+        const record = parseQueryParams(request.raw.url ?? '')
+
+        const user = await server.prisma.user.findUnique({
+          where: {
+            id: payload.sub
+          }
+        })
+
+        if (!user) {
+          return reply.status(401).send({
+            message: 'Unauthorized'
+          })
+        }
+
+        const url = await server.prisma.url.findUnique({
+          where: {
+            id
+          }
+        })
+        if (!url || Boolean(url.deletedAt) || url.userId !== user.id) {
+          return reply.status(404).send({
+            message: 'Not found'
+          })
+        }
+
+        const accesses = await server.prisma.urlAccess.findMany({
+          where: {
+            urlId: url.id
+          }
+        })
+
+        const result: z.infer<typeof urlAnalyticsSchema> = {}
+
+        const { type } = urlAnalyticsTypeSchema.parse(record)
+        const fmt = type === 'hourly' ? 'yyyy-MM-dd hh' : 'yyyy-MM-dd'
+
+        accesses.forEach((access) => {
+          const key = format(new Date(access.createdAt), fmt)
+          if (!result[key]) {
+            result[key] = 0
+          }
+
+          result[key]++
+        })
+
+        return reply.status(200).send(result)
+      }
+    })
     next()
   }
 )

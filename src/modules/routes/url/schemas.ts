@@ -32,10 +32,16 @@ export const urlListSchema = z.object({
   data: z.array(singleUrlSchema)
 })
 
-export const deleteUrlSchema = z.object({
+export const findSingleUrlSchema = z.object({
   id: z.string()
 })
 
 export const findUrlSchema = z.object({
   hash: z.string()
 })
+
+export const urlAnalyticsTypeSchema = z.object({
+  type: z.enum(['hourly', 'daily']).default('hourly')
+})
+
+export const urlAnalyticsSchema = z.record(z.number())
